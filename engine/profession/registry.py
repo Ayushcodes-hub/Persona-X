@@ -1,0 +1,156 @@
+from typing import Dict, List
+
+
+PROFESSION_CAPABILITIES: Dict[str, List[str]] = {
+    "athlete": [
+        "teams",
+        "competitions",
+        "performances",
+        "records",
+        "awards",
+        "interviews",
+        "statements",
+        "endorsements",
+        "philanthropy",
+        "public_activity",
+        "career_evolution",
+    ],
+    "actor": [
+        "films",
+        "television",
+        "roles",
+        "awards",
+        "interviews",
+        "statements",
+        "production",
+        "business",
+        "endorsements",
+        "philanthropy",
+        "public_activity",
+    ],
+    "scientist": [
+        "education",
+        "institutions",
+        "research",
+        "publications",
+        "patents",
+        "discoveries",
+        "awards",
+        "lectures",
+        "scientific_statements",
+        "science_policy",
+        "public_activity",
+    ],
+    "entrepreneur": [
+        "companies",
+        "founding",
+        "leadership",
+        "funding",
+        "products",
+        "investments",
+        "business_strategy",
+        "business_statements",
+        "public_policy",
+        "initiatives",
+    ],
+    "politician": [
+        "elections",
+        "offices",
+        "legislation",
+        "speeches",
+        "votes",
+        "policies",
+        "initiatives",
+        "party_affiliation",
+        "public_statements",
+        "political_activity",
+    ],
+    "journalist": [
+        "publications",
+        "newsrooms",
+        "reporting",
+        "investigations",
+        "interviews",
+        "commentary",
+        "editorial_positions",
+        "awards",
+        "public_statements",
+    ],
+    "author": [
+        "books",
+        "publications",
+        "genres",
+        "awards",
+        "interviews",
+        "themes",
+        "literary_statements",
+        "public_activity",
+    ],
+    "academic": [
+        "education",
+        "institutions",
+        "teaching",
+        "research",
+        "publications",
+        "citations",
+        "awards",
+        "lectures",
+        "academic_statements",
+    ],
+    "artist": [
+        "works",
+        "exhibitions",
+        "collections",
+        "awards",
+        "interviews",
+        "themes",
+        "public_statements",
+        "commissions",
+        "public_activity",
+    ],
+    "generic": [
+        "career",
+        "affiliations",
+        "statements",
+        "initiatives",
+        "achievements",
+        "public_activity",
+    ],
+}
+
+
+def normalize_profession(profession: str) -> str:
+    value = profession.strip().lower()
+
+    aliases = {
+        "sportsman": "athlete",
+        "sportsperson": "athlete",
+        "cricketer": "athlete",
+        "footballer": "athlete",
+        "actor": "actor",
+        "actress": "actor",
+        "film actor": "actor",
+        "researcher": "scientist",
+        "scientist": "scientist",
+        "businessman": "entrepreneur",
+        "businesswoman": "entrepreneur",
+        "founder": "entrepreneur",
+        "ceo": "entrepreneur",
+        "politician": "politician",
+        "journalist": "journalist",
+        "writer": "author",
+        "author": "author",
+        "professor": "academic",
+        "academic": "academic",
+        "artist": "artist",
+    }
+
+    return aliases.get(value, value)
+
+
+def get_capabilities(profession: str) -> List[str]:
+    normalized = normalize_profession(profession)
+    return PROFESSION_CAPABILITIES.get(
+        normalized,
+        PROFESSION_CAPABILITIES["generic"],
+    )

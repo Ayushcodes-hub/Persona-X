@@ -1,0 +1,41 @@
+# Environments and Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Database
+data/*.db
+data/*.db*
+data/*.sqlite
+data/*.sqlite3
+stage50_backup/
+
+# Logs
+logs/
+*.log
+
+# Node & Frontend
+node_modules/
+dist/
+build/
+.next/
+.cache/
+
+# OS Specific
+.DS_Store
+Thumbs.db
