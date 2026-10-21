@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: persona-x-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-persona_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-persona_secret_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-persona_x}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-persona_user} -d ${POSTGRES_DB:-persona_x}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: persona-x-app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-persona_user}:${POSTGRES_PASSWORD:-persona_secret_pass}@db:5432/${POSTGRES_DB:-persona_x}
+      DIRECT_URL: postgresql+psycopg2://${POSTGRES_USER:-persona_user}:${POSTGRES_PASSWORD:-persona_secret_pass}@db:5432/${POSTGRES_DB:-persona_x}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    volumes:
+      - app_logs:/app/logs
+
+volumes:
+  postgres_data:
+  app_logs:
