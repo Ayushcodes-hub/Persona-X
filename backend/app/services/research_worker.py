@@ -193,14 +193,13 @@ class ResearchJobManager:
                 if job is None:
                     return False
 
-                if job.status in {"queued", "running"}:
-                    if job_id in self._futures:
-                        return False
-
-                    if not force:
-                        return False
+                if job_id in self._futures and not self._futures[job_id].done():
+                    return False
 
                 if job.status == "completed" and not force:
+                    return False
+
+                if job.status == "running" and not force:
                     return False
 
                 if job.status == "failed" and not force:

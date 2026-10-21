@@ -58,23 +58,29 @@ class EventStreamHub:
         }
 
         with self._lock:
-            queues = list(self._subscribers.get(job_id, []))
+            subscribers = list(self._subscribers.get(job_id, []))
 
-        for q in queues:
+        for loop, q in subscribers:
             try:
-                q.put_nowait(payload)
-            except Exception:
-                pass
+                if loop.is_running():
+                    loop.call_soon_threadsafe(q.put_nowait, payload)
+                else:
+                    q.put_nowait(payload)
+            except Exception as exc:
+                logger.debug("Failed to deliver SSE event: %s", exc)
 
     async def stream(self, job_id: int, last_event_id: Optional[int] = None) -> AsyncGenerator[str, None]:
         """
         Stream SSE events for a job, replaying missed events if last_event_id is provided.
         """
+        loop = asyncio.get_running_loop()
         queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+        entry = (loop, queue)
+
         with self._lock:
             if job_id not in self._subscribers:
                 self._subscribers[job_id] = []
-            self._subscribers[job_id].append(queue)
+            self._subscribers[job_id].append(entry)
 
         try:
             # 1. Yield initial connected event
@@ -130,8 +136,8 @@ class EventStreamHub:
                     yield ": ping\n\n"
         finally:
             with self._lock:
-                if job_id in self._subscribers and queue in self._subscribers[job_id]:
-                    self._subscribers[job_id].remove(queue)
+                if job_id in self._subscribers and entry in self._subscribers[job_id]:
+                    self._subscribers[job_id].remove(entry)
                     if not self._subscribers[job_id]:
                         del self._subscribers[job_id]
 
