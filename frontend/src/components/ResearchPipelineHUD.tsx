@@ -45,6 +45,11 @@ export const ResearchPipelineHUD: React.FC<ResearchPipelineHUDProps> = ({
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [resolvedPersonId, setResolvedPersonId] = useState<number | null>(null);
   const eventLogRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef(status);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   // Timer
   useEffect(() => {
@@ -80,8 +85,8 @@ export const ResearchPipelineHUD: React.FC<ResearchPipelineHUDProps> = ({
         const mappedIdx = PIPELINE_STAGES.findIndex(
           (s) => s.id === stageName || s.label.toLowerCase().includes(stageName.toLowerCase())
         );
-        if (mappedIdx !== -1 && mappedIdx > currentStageIndex) {
-          setCurrentStageIndex(mappedIdx);
+        if (mappedIdx !== -1) {
+          setCurrentStageIndex((prev) => (mappedIdx > prev ? mappedIdx : prev));
         }
 
         if (ev.event === 'job_completed') {
@@ -110,7 +115,7 @@ export const ResearchPipelineHUD: React.FC<ResearchPipelineHUDProps> = ({
 
     // Periodic status poll fallback
     const pollInterval = setInterval(async () => {
-      if (status === 'completed') return;
+      if (statusRef.current === 'completed' || statusRef.current === 'failed') return;
       try {
         const poll = await personaApi.getResearchStatus(jobId);
         if (poll.source_count) setSourceCount(poll.source_count);

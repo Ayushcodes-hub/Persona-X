@@ -18,7 +18,6 @@ export const EntitiesDirectory: React.FC<EntitiesDirectoryProps> = ({
   const [filterProfession, setFilterProfession] = useState<string>('all');
 
   useEffect(() => {
-    setLoading(true);
     personaApi.listPersons(100, 0)
       .then((res) => {
         setPersons(res.items || []);

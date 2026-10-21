@@ -11,7 +11,7 @@ export const ObservabilityView: React.FC<ObservabilityViewProps> = ({ initialSta
   const [status, setStatus] = useState<SystemStatus | null>(initialStatus);
   const [loading, setLoading] = useState(false);
 
-  const fetchStatus = async () => {
+  const refreshStatus = async () => {
     setLoading(true);
     try {
       const res = await personaApi.getSystemStatus();
@@ -24,9 +24,21 @@ export const ObservabilityView: React.FC<ObservabilityViewProps> = ({ initialSta
   };
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 10000);
-    return () => clearInterval(interval);
+    let active = true;
+    const poll = async () => {
+      try {
+        const res = await personaApi.getSystemStatus();
+        if (active) setStatus(res);
+      } catch (err) {
+        console.error('Failed to refresh status', err);
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 10000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const dbConnected = status?.database?.status === 'connected';
@@ -49,7 +61,7 @@ export const ObservabilityView: React.FC<ObservabilityViewProps> = ({ initialSta
         </div>
 
         <button
-          onClick={fetchStatus}
+          onClick={refreshStatus}
           className="badge badge-muted glass-interactive"
           style={{ padding: '8px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
         >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, X, Sparkles, Globe, UserCheck, ArrowRight, Loader2, BookOpen } from 'lucide-react';
 import { personaApi } from '../services/api';
 import type { ExternalCandidate, PersonSearchResult } from '../types';
@@ -22,13 +22,16 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
   const [candidates, setCandidates] = useState<ExternalCandidate[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleClose = useCallback(() => {
+    setQuery('');
+    setLocalPersons([]);
+    setCandidates([]);
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
-    } else {
-      setQuery('');
-      setLocalPersons([]);
-      setCandidates([]);
     }
   }, [isOpen]);
 
@@ -36,24 +39,27 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (isOpen) onClose();
-        else {
-          // Open trigger handled by parent
-        }
+        if (isOpen) handleClose();
       }
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
+
+  const handleQueryChange = (val: string) => {
+    setQuery(val);
+    if (!val.trim() || val.trim().length < 2) {
+      setLocalPersons([]);
+      setCandidates([]);
+    }
+  };
 
   // Debounced search
   useEffect(() => {
     if (!query.trim() || query.trim().length < 2) {
-      setLocalPersons([]);
-      setCandidates([]);
       return;
     }
 
@@ -89,7 +95,7 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
         paddingTop: '80px',
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div
@@ -112,7 +118,7 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleQueryChange(e.target.value)}
             placeholder="Search any public figure (e.g. Jasprit Bumrah, Arvind Kejriwal, Sundar Pichai)..."
             style={{
               flex: 1,
@@ -126,12 +132,12 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
           />
           {loading && <Loader2 size={18} color="var(--accent-cyan)" className="pulse-active" />}
           {query && !loading && (
-            <button onClick={() => setQuery('')} style={{ color: 'var(--text-muted)' }}>
+            <button onClick={() => handleQueryChange('')} style={{ color: 'var(--text-muted)' }}>
               <X size={16} />
             </button>
           )}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             style={{
               background: 'rgba(255, 255, 255, 0.05)',
               padding: '4px 8px',
@@ -152,7 +158,7 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
             <div
               onClick={() => {
                 onStartResearch(query.trim());
-                onClose();
+                handleClose();
               }}
               className="glass-interactive"
               style={{
@@ -194,7 +200,7 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
                     key={p.id}
                     onClick={() => {
                       onSelectPerson(p.id);
-                      onClose();
+                      handleClose();
                     }}
                     className="glass-interactive"
                     style={{
@@ -240,7 +246,7 @@ export const OmnibarModal: React.FC<OmnibarModalProps> = ({
                     key={c.wikidata_id || i}
                     onClick={() => {
                       onStartResearch(c.label);
-                      onClose();
+                      handleClose();
                     }}
                     className="glass-interactive"
                     style={{

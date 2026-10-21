@@ -53,7 +53,11 @@ export function App() {
   useEffect(() => {
     if (!selectedPersonId) return;
 
-    setLoadingDossier(true);
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) setLoadingDossier(true);
+    });
+
     Promise.all([
       personaApi.getDossier(selectedPersonId).catch(() => null),
       personaApi.getTimeline(selectedPersonId).catch(() => ({ events: [] })),
@@ -63,6 +67,7 @@ export function App() {
       personaApi.getGraph(selectedPersonId).catch(() => null),
       personaApi.getPoliticalAnalysis(selectedPersonId).catch(() => null),
     ]).then(([dossierRes, timeRes, statRes, initRes, srcRes, graphRes, polRes]) => {
+      if (!active) return;
       setDossier(dossierRes);
       setTimeline(timeRes?.events || []);
       setStatements(statRes?.statements || []);
@@ -71,8 +76,12 @@ export function App() {
       setGraphData(graphRes);
       setPoliticalData(polRes);
     }).finally(() => {
-      setLoadingDossier(false);
+      if (active) setLoadingDossier(false);
     });
+
+    return () => {
+      active = false;
+    };
   }, [selectedPersonId]);
 
   // Handler to start research on any figure

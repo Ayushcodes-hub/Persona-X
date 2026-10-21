@@ -25,6 +25,7 @@ export const EvidenceGraphCanvas: React.FC<EvidenceGraphCanvasProps> = ({
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
+  const [cursor, setCursor] = useState<'default' | 'move' | 'grabbing' | 'crosshair'>('crosshair');
 
   // Simulation state
   const nodesRef = useRef<GraphNode[]>([]);
@@ -203,10 +204,12 @@ export const EvidenceGraphCanvas: React.FC<EvidenceGraphCanvasProps> = ({
     if (clicked) {
       dragNodeRef.current = clicked;
       setSelectedNode(clicked);
+      setCursor('grabbing');
       if (onNodeSelect) onNodeSelect(clicked);
     } else {
       isDraggingRef.current = true;
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+      setCursor('move');
     }
   };
 
@@ -244,6 +247,7 @@ export const EvidenceGraphCanvas: React.FC<EvidenceGraphCanvasProps> = ({
   const handleMouseUp = () => {
     isDraggingRef.current = false;
     dragNodeRef.current = null;
+    setCursor('crosshair');
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
@@ -321,7 +325,7 @@ export const EvidenceGraphCanvas: React.FC<EvidenceGraphCanvasProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
-        style={{ width: '100%', height: '100%', cursor: dragNodeRef.current ? 'grabbing' : isDraggingRef.current ? 'move' : 'crosshair' }}
+        style={{ width: '100%', height: '100%', cursor }}
       />
 
       {/* Node Inspector Drawer */}
